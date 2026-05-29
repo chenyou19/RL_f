@@ -11,6 +11,10 @@ def evaluate_fixed_pipeline(datasets, actions, seed=42):
         results.append(
             {
                 "dataset": dataset.name,
+                "dataset_name": dataset.name,
+                "task_id": getattr(dataset, "task_id", None),
+                "dataset_id": getattr(dataset, "dataset_id", None),
+                "split_type": getattr(dataset, "split_type", "train"),
                 "pipeline": actions,
                 "f1": result["f1"],
                 "time": result["time"],

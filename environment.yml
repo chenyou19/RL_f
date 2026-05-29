@@ -10,5 +10,6 @@ dependencies:
   - scikit-learn
   - matplotlib
   - tqdm
+  - openml
   - pytorch
   - pytorch-cuda=12.1

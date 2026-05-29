@@ -24,6 +24,11 @@ def run_random_agent(env, episodes=100):
         results.append(
             {
                 "episode": ep,
+                "dataset": final_info.get("dataset"),
+                "dataset_name": final_info.get("dataset_name"),
+                "task_id": final_info.get("task_id"),
+                "dataset_id": final_info.get("dataset_id"),
+                "split_type": final_info.get("split_type"),
                 "reward": total_reward,
                 "f1": final_info.get("f1"),
                 "pipeline": final_info.get("pipeline"),

@@ -53,6 +53,10 @@ def run_grid_search_baseline(datasets, seed=42):
         all_results.append(
             {
                 "dataset": dataset.name,
+                "dataset_name": dataset.name,
+                "task_id": getattr(dataset, "task_id", None),
+                "dataset_id": getattr(dataset, "dataset_id", None),
+                "split_type": getattr(dataset, "split_type", "train"),
                 "best_f1": best_f1,
                 "best_pipeline": best_pipeline,
                 "time": best_time,

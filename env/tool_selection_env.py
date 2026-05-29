@@ -64,6 +64,10 @@ class ToolSelectionEnv:
 
         info = {
             "dataset": self.current_dataset.name,
+            "dataset_name": self.current_dataset.name,
+            "task_id": getattr(self.current_dataset, "task_id", None),
+            "dataset_id": getattr(self.current_dataset, "dataset_id", None),
+            "split_type": getattr(self.current_dataset, "split_type", "train"),
             "action": action,
             "pipeline": list(self.pipeline_actions),
             "invalid": False,

@@ -146,6 +146,77 @@ The MVP uses built-in scikit-learn classification datasets:
 Each dataset is split into train, validation, and test sets. The current
 environment evaluates pipelines on the validation split.
 
+### OpenML-CC18 Dataset-Level Split
+
+The default configuration uses the OpenML-CC18 benchmark suite:
+
+```text
+suite_id = 99
+```
+
+The split is done at the dataset/task level. The following 12 OpenML tasks are
+held out for final testing only and are never used during DQN training:
+
+```text
+37, 53, 43, 9952, 9957, 146817, 3917, 3903, 28, 32, 9976, 9910
+```
+
+All remaining tasks from suite 99 are used as training datasets. Each dataset
+still receives its own internal train/validation/test sample split; training
+rewards use the validation split, and the held-out report uses the 12 reserved
+datasets.
+
+Run the split check:
+
+```bash
+python scripts/check_openml_split.py
+```
+
+Preload OpenML datasets into the local cache:
+
+```bash
+python scripts/load_openml_datasets.py --split train
+python scripts/load_openml_datasets.py --split test
+```
+
+Train the DQN on training tasks only:
+
+```bash
+python train_dqn.py
+```
+
+Evaluate the trained model on the 12 held-out tasks:
+
+```bash
+python scripts/evaluate_heldout_openml.py
+```
+
+Held-out evaluation is written to:
+
+```text
+results/tables/openml_cc18_heldout_test_results.csv
+```
+
+The preload report is written to:
+
+```text
+results/tables/openml_cc18_dataset_load_report.csv
+```
+
+### Progress Bars
+
+OpenML dataset loading, DQN training, split checking, and held-out evaluation
+show progress bars by default. Training progress includes the current task,
+dataset name, reward, validation F1, invalid action count, pipeline length, and
+epsilon. Held-out evaluation progress includes task id, dataset name, F1,
+accuracy, invalid action count, and pipeline length.
+
+To disable progress bars, set this in `config.py`:
+
+```python
+SHOW_PROGRESS = False
+```
+
 ## Action Space
 
 The current action space is defined in `config.py`:
@@ -166,7 +237,8 @@ from rewards rather than using an action mask.
 
 ## Current Limitations
 
-- Datasets are limited to scikit-learn built-in datasets.
+- OpenML-CC18 is now the default dataset source; scikit-learn built-in datasets
+  remain available as a fallback in `DatasetManager`.
 - Feature selection currently uses `k="all"` as a placeholder.
 - Reward does not yet include a detailed computational cost term.
 - DQN does not use action masking.

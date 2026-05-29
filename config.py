@@ -1,6 +1,26 @@
 import os
 
 SEED = 42
+SHOW_PROGRESS = True
+
+USE_OPENML_CC18 = True
+DATASET_SPLIT_MODE = "openml_cc18_holdout"
+OPENML_SUITE_ID = 99
+OPENML_CACHE_DIR = "data/openml_cache"
+TEST_OPENML_TASKS = [
+    37,      # diabetes
+    53,      # vehicle
+    43,      # spambase
+    9952,    # phoneme
+    9957,    # qsar-biodeg
+    146817,  # steel-plates-fault
+    3917,    # kc1
+    3903,    # pc3
+    28,      # optdigits
+    32,      # pendigits
+    9976,    # madelon
+    9910,    # Bioresponse
+]
 
 RESULT_DIR = "results"
 LOG_DIR = os.path.join(RESULT_DIR, "logs")

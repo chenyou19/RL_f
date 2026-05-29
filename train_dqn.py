@@ -1,12 +1,14 @@
 import os
+import sys
 
 import numpy as np
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from agents.dqn_agent import DQNAgent
 from config import (
     ACTION_DIM,
     BATCH_SIZE,
+    DATASET_SPLIT_MODE,
     EPS_DECAY,
     EPS_END,
     EPS_START,
@@ -18,14 +20,58 @@ from config import (
     MIN_REPLAY_SIZE,
     REPLAY_BUFFER_SIZE,
     SEED,
+    SHOW_PROGRESS,
     STATE_DIM,
     TARGET_UPDATE_FREQ,
+    TEST_OPENML_TASKS,
+    USE_OPENML_CC18,
 )
-from data.dataset_manager import DatasetManager
+from data.dataset_manager import DatasetManager, OpenMLCC18DatasetManager
 from env.tool_selection_env import ToolSelectionEnv
 from utils.metrics import save_results_csv
 from utils.plot import moving_average, plot_curve
 from utils.seed import set_seed
+
+
+def load_training_datasets(seed: int):
+    if not USE_OPENML_CC18:
+        dataset_manager = DatasetManager(seed=seed)
+        return dataset_manager.load_all()
+
+    if DATASET_SPLIT_MODE != "openml_cc18_holdout":
+        raise ValueError(f"Unsupported DATASET_SPLIT_MODE: {DATASET_SPLIT_MODE}")
+
+    dataset_manager = OpenMLCC18DatasetManager(seed=seed)
+    train_task_ids = dataset_manager.get_train_task_ids()
+    leaked_tasks = sorted(set(train_task_ids) & set(TEST_OPENML_TASKS))
+    if leaked_tasks:
+        raise RuntimeError(f"Held-out OpenML test tasks leaked into training: {leaked_tasks}")
+
+    tqdm.write(
+        "OpenML-CC18 dataset-level split: "
+        f"{len(train_task_ids)} train tasks, "
+        f"{len(dataset_manager.get_test_task_ids())} held-out test tasks."
+    )
+
+    datasets = []
+    progress = tqdm(
+        train_task_ids,
+        desc="Loading OpenML-CC18 train datasets",
+        unit="task",
+        disable=not SHOW_PROGRESS,
+        file=sys.stdout,
+    )
+    for task_id in progress:
+        progress.set_postfix(task_id=task_id, dataset_name="")
+        try:
+            dataset = dataset_manager.load_openml_task(task_id, split_type="train")
+        except Exception as exc:
+            tqdm.write(f"Failed to load OpenML task {task_id}: {exc}")
+            raise
+        progress.set_postfix(task_id=task_id, dataset_name=dataset.name)
+        datasets.append(dataset)
+
+    return datasets
 
 
 def train_dqn():
@@ -34,8 +80,7 @@ def train_dqn():
     os.makedirs(LOG_DIR, exist_ok=True)
     os.makedirs(FIGURE_DIR, exist_ok=True)
 
-    dataset_manager = DatasetManager(seed=SEED)
-    datasets = dataset_manager.load_all()
+    datasets = load_training_datasets(SEED)
 
     env = ToolSelectionEnv(datasets=datasets, seed=SEED)
 
@@ -58,7 +103,14 @@ def train_dqn():
 
     results = []
 
-    for ep in tqdm(range(EPISODES), desc="Training DQN"):
+    progress = tqdm(
+        range(EPISODES),
+        desc="Training DQN",
+        unit="episode",
+        disable=not SHOW_PROGRESS,
+        file=sys.stdout,
+    )
+    for ep in progress:
         state = env.reset()
         done = False
 
@@ -98,6 +150,10 @@ def train_dqn():
             {
                 "episode": ep,
                 "dataset": final_info.get("dataset"),
+                "dataset_name": final_info.get("dataset_name"),
+                "task_id": final_info.get("task_id"),
+                "dataset_id": final_info.get("dataset_id"),
+                "split_type": final_info.get("split_type"),
                 "reward": total_reward,
                 "loss": avg_loss,
                 "epsilon": epsilon,
@@ -107,6 +163,17 @@ def train_dqn():
                 "pipeline_length": len(env.pipeline_actions),
                 "cache_hit": final_info.get("cache_hit"),
             }
+        )
+
+        f1 = final_info.get("f1")
+        progress.set_postfix(
+            task_id=final_info.get("task_id"),
+            dataset=final_info.get("dataset_name"),
+            reward=f"{total_reward:.4f}",
+            f1="None" if f1 is None else f"{f1:.4f}",
+            invalid=env.invalid_count,
+            length=len(env.pipeline_actions),
+            epsilon=f"{epsilon:.4f}",
         )
 
     save_results_csv(results, os.path.join(LOG_DIR, "dqn_training_results.csv"))
@@ -141,9 +208,9 @@ def train_dqn():
 
     agent.save(os.path.join(LOG_DIR, "dqn_agent.pth"))
 
-    print("Training finished.")
-    print(f"Results saved to {LOG_DIR}")
-    print(f"Figures saved to {FIGURE_DIR}")
+    tqdm.write("Training finished.")
+    tqdm.write(f"Results saved to {LOG_DIR}")
+    tqdm.write(f"Figures saved to {FIGURE_DIR}")
 
 
 if __name__ == "__main__":
