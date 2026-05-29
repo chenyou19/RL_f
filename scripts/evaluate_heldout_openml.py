@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import sys
+from datetime import datetime
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -14,10 +15,13 @@ from tqdm.auto import tqdm
 
 from config import (
     ACTION_DIM,
+    ACTIONS,
     BATCH_SIZE,
+    DEBUG_ACTION_TRACE,
     GAMMA,
     LOG_DIR,
     LR,
+    MAX_STEPS,
     REPLAY_BUFFER_SIZE,
     SEED,
     SHOW_PROGRESS,
@@ -31,26 +35,65 @@ from tools.tool_executor import ToolExecutor
 from utils.seed import set_seed
 
 
+def format_state_summary(state):
+    return {
+        "has_scaler": float(state[6]),
+        "has_pca": float(state[7]),
+        "has_feature_selection": float(state[8]),
+        "has_model": float(state[9]),
+        "pipeline_ratio": float(state[10]),
+        "invalid_ratio": float(state[11]),
+    }
+
+
+def debug_action_trace(dataset_name, step, state, action_id, env, reward=None, done=None):
+    if not DEBUG_ACTION_TRACE:
+        return
+
+    tqdm.write(
+        " | ".join(
+            [
+                f"dataset={dataset_name}",
+                f"step={step}",
+                f"state={format_state_summary(state)}",
+                f"selected_action={ACTIONS[action_id]}",
+                f"current_pipeline={list(env.pipeline_actions)}",
+                f"reward={reward}",
+                f"done={done}",
+                f"valid_actions={[ACTIONS[i] for i in env.get_valid_actions()]}",
+                f"action_mask={env.get_action_mask().tolist()}",
+            ]
+        )
+    )
+
+
 def evaluate_agent_on_dataset(agent, dataset, seed):
     env = ToolSelectionEnv(datasets=[dataset], seed=seed)
-    state = env.reset()
+    state = env.reset(dataset)
     done = False
     final_info = None
+    step = 0
 
-    while not done:
-        action_id = agent.select_action(state, epsilon=0.0)
-        state, _, done, info = env.step(action_id)
+    while not done and step < MAX_STEPS:
+        action_mask = env.get_action_mask()
+        action_id = agent.select_action(state, epsilon=0.0, action_mask=action_mask)
+        debug_action_trace(dataset.name, step, state, action_id, env)
+        next_state, reward, done, info = env.step(action_id)
+        debug_action_trace(dataset.name, step, next_state, action_id, env, reward, done)
+        state = next_state
         final_info = info
+        step += 1
 
-    actions = list(env.pipeline_actions)
+    selected_pipeline = list(env.pipeline_actions)
+    actions = list(env.action_history)
     validation_score = final_info.get("f1") if final_info else None
     test_f1 = None
     test_accuracy = None
 
-    if actions:
+    if selected_pipeline:
         try:
             executor = ToolExecutor(seed=seed)
-            pipeline = executor.build_pipeline(actions)
+            pipeline = executor.build_pipeline(selected_pipeline)
             X_fit = np.vstack([dataset.X_train, dataset.X_val])
             y_fit = np.concatenate([dataset.y_train, dataset.y_val])
             pipeline.fit(X_fit, y_fit)
@@ -63,14 +106,14 @@ def evaluate_agent_on_dataset(agent, dataset, seed):
     return {
         "task_id": dataset.task_id,
         "dataset_name": dataset.name,
-        "selected_pipeline": actions,
+        "selected_pipeline": selected_pipeline,
         "actions": actions,
         "validation_score": validation_score,
         "test_score": test_f1,
         "f1": test_f1,
         "accuracy": test_accuracy,
         "invalid_action_count": env.invalid_count,
-        "pipeline_length": len(actions),
+        "pipeline_length": len(selected_pipeline),
     }
 
 
@@ -124,7 +167,19 @@ def main():
 
     os.makedirs(TABLE_DIR, exist_ok=True)
     output_path = os.path.join(TABLE_DIR, "openml_cc18_heldout_test_results.csv")
-    pd.DataFrame(rows).to_csv(output_path, index=False, encoding="utf-8-sig")
+    try:
+        pd.DataFrame(rows).to_csv(output_path, index=False, encoding="utf-8-sig")
+    except PermissionError:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_path = os.path.join(
+            TABLE_DIR,
+            f"openml_cc18_heldout_test_results_{timestamp}.csv",
+        )
+        pd.DataFrame(rows).to_csv(output_path, index=False, encoding="utf-8-sig")
+        tqdm.write(
+            "Could not overwrite openml_cc18_heldout_test_results.csv; "
+            f"saved to {output_path} instead."
+        )
     tqdm.write(f"Saved held-out OpenML results to {output_path}")
 
 

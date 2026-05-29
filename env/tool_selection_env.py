@@ -26,8 +26,10 @@ class ToolSelectionEnv:
 
         self.current_dataset = None
         self.dataset_profile = None
+        self.dataset_pool = []
 
         self.pipeline_actions = []
+        self.action_history = []
         self.done = False
 
         self.has_scaler = False
@@ -38,11 +40,14 @@ class ToolSelectionEnv:
         self.invalid_count = 0
         self.step_count = 0
 
-    def reset(self):
-        self.current_dataset = random.choice(self.datasets)
+    def reset(self, dataset=None):
+        self.current_dataset = (
+            dataset if dataset is not None else self._sample_dataset_without_replacement()
+        )
         self.dataset_profile = self.profiler.profile(self.current_dataset)
 
         self.pipeline_actions = []
+        self.action_history = []
         self.done = False
 
         self.has_scaler = False
@@ -55,12 +60,23 @@ class ToolSelectionEnv:
 
         return self._get_state()
 
+    def _sample_dataset_without_replacement(self):
+        if not self.datasets:
+            raise ValueError("ToolSelectionEnv requires at least one dataset.")
+
+        if not self.dataset_pool:
+            self.dataset_pool = list(self.datasets)
+            random.shuffle(self.dataset_pool)
+
+        return self.dataset_pool.pop()
+
     def step(self, action_id: int):
         if self.done:
             raise RuntimeError("Episode is already done. Please call reset().")
 
         action = ACTIONS[action_id]
         self.step_count += 1
+        self.action_history.append(action)
 
         info = {
             "dataset": self.current_dataset.name,
@@ -69,6 +85,7 @@ class ToolSelectionEnv:
             "dataset_id": getattr(self.current_dataset, "dataset_id", None),
             "split_type": getattr(self.current_dataset, "split_type", "train"),
             "action": action,
+            "actions": list(self.action_history),
             "pipeline": list(self.pipeline_actions),
             "invalid": False,
             "f1": None,
@@ -84,6 +101,7 @@ class ToolSelectionEnv:
             next_state = self._get_state()
 
             info["invalid"] = True
+            info["actions"] = list(self.action_history)
             info["pipeline"] = list(self.pipeline_actions)
 
             return next_state, reward, done, info
@@ -93,6 +111,7 @@ class ToolSelectionEnv:
             self.done = True
 
             info.update(eval_info)
+            info["actions"] = list(self.action_history)
             info["pipeline"] = list(self.pipeline_actions)
 
             return self._get_state(), reward, True, info
@@ -106,9 +125,23 @@ class ToolSelectionEnv:
             reward = -0.5
 
         next_state = self._get_state()
+        info["actions"] = list(self.action_history)
         info["pipeline"] = list(self.pipeline_actions)
 
         return next_state, reward, self.done, info
+
+    def get_valid_actions(self):
+        return [
+            action_id
+            for action_id, action in enumerate(ACTIONS)
+            if not self._is_invalid_action(action)
+        ]
+
+    def get_action_mask(self):
+        mask = np.zeros(len(ACTIONS), dtype=np.float32)
+        for action_id in self.get_valid_actions():
+            mask[action_id] = 1.0
+        return mask
 
     def _apply_action(self, action: str):
         self.pipeline_actions.append(action)

@@ -2,6 +2,7 @@ import os
 import sys
 
 import numpy as np
+import pandas as pd
 from tqdm.auto import tqdm
 
 from agents.dqn_agent import DQNAgent
@@ -18,7 +19,10 @@ from config import (
     LOG_DIR,
     LR,
     MIN_REPLAY_SIZE,
+    MODEL_SAVE_FREQ,
     REPLAY_BUFFER_SIZE,
+    RESUME_MODEL_PATH,
+    RESUME_TRAINING,
     SEED,
     SHOW_PROGRESS,
     STATE_DIM,
@@ -31,6 +35,34 @@ from env.tool_selection_env import ToolSelectionEnv
 from utils.metrics import save_results_csv
 from utils.plot import moving_average, plot_curve
 from utils.seed import set_seed
+
+
+def load_existing_training_log(log_path, start_episode):
+    if not os.path.exists(log_path):
+        return [], [], [], [], [], []
+
+    df = pd.read_csv(log_path)
+    if "episode" in df.columns:
+        df = df[df["episode"] < start_episode]
+
+    results = df.to_dict("records")
+    rewards = df.get("reward", pd.Series(dtype=float)).fillna(0.0).astype(float).tolist()
+    losses = df.get("loss", pd.Series(dtype=float)).fillna(0.0).astype(float).tolist()
+    f1s = df.get("f1", pd.Series(dtype=float)).fillna(0.0).astype(float).tolist()
+    invalids = (
+        df.get("invalid_count", pd.Series(dtype=float))
+        .fillna(0.0)
+        .astype(float)
+        .tolist()
+    )
+    lengths = (
+        df.get("pipeline_length", pd.Series(dtype=float))
+        .fillna(0.0)
+        .astype(float)
+        .tolist()
+    )
+
+    return results, rewards, losses, f1s, invalids, lengths
 
 
 def load_training_datasets(seed: int):
@@ -94,6 +126,23 @@ def train_dqn():
     )
 
     epsilon = EPS_START
+    start_episode = 0
+
+    if RESUME_TRAINING:
+        if not os.path.exists(RESUME_MODEL_PATH):
+            raise FileNotFoundError(f"Resume checkpoint not found: {RESUME_MODEL_PATH}")
+        checkpoint = agent.load(RESUME_MODEL_PATH)
+        start_episode = int(checkpoint.get("completed_episodes", 0) or 0)
+        epsilon = float(
+            checkpoint.get(
+                "epsilon",
+                max(EPS_END, EPS_START * (EPS_DECAY ** start_episode)),
+            )
+        )
+        tqdm.write(
+            "Resumed training from "
+            f"{RESUME_MODEL_PATH} at episode {start_episode}, epsilon={epsilon:.4f}."
+        )
 
     episode_rewards = []
     episode_losses = []
@@ -102,14 +151,33 @@ def train_dqn():
     episode_lengths = []
 
     results = []
+    log_path = os.path.join(LOG_DIR, "dqn_training_results.csv")
+    if RESUME_TRAINING:
+        (
+            results,
+            episode_rewards,
+            episode_losses,
+            episode_f1s,
+            episode_invalids,
+            episode_lengths,
+        ) = load_existing_training_log(log_path, start_episode)
+        if results:
+            tqdm.write(f"Loaded {len(results)} previous training log rows.")
+
+    if start_episode >= EPISODES:
+        tqdm.write(
+            f"Start episode {start_episode} is already >= EPISODES {EPISODES}; "
+            "no additional episodes will run."
+        )
 
     progress = tqdm(
-        range(EPISODES),
+        range(start_episode, EPISODES),
         desc="Training DQN",
         unit="episode",
         disable=not SHOW_PROGRESS,
         file=sys.stdout,
     )
+    last_completed_episode = start_episode
     for ep in progress:
         state = env.reset()
         done = False
@@ -119,7 +187,8 @@ def train_dqn():
         final_info = None
 
         while not done:
-            action_id = agent.select_action(state, epsilon)
+            action_mask = env.get_action_mask()
+            action_id = agent.select_action(state, epsilon, action_mask=action_mask)
             next_state, reward, done, info = env.step(action_id)
 
             agent.replay_buffer.push(state, action_id, reward, next_state, done)
@@ -176,7 +245,17 @@ def train_dqn():
             epsilon=f"{epsilon:.4f}",
         )
 
-    save_results_csv(results, os.path.join(LOG_DIR, "dqn_training_results.csv"))
+        if MODEL_SAVE_FREQ > 0 and (ep + 1) % MODEL_SAVE_FREQ == 0:
+            checkpoint_path = os.path.join(LOG_DIR, f"dqn_agent_ep_{ep + 1}.pth")
+            agent.save(
+                checkpoint_path,
+                completed_episodes=ep + 1,
+                epsilon=epsilon,
+            )
+            tqdm.write(f"Saved checkpoint to {checkpoint_path}")
+        last_completed_episode = ep + 1
+
+    save_results_csv(results, log_path)
 
     plot_curve(
         moving_average(episode_rewards),
@@ -206,7 +285,11 @@ def train_dqn():
         os.path.join(FIGURE_DIR, "dqn_pipeline_length_curve.png"),
     )
 
-    agent.save(os.path.join(LOG_DIR, "dqn_agent.pth"))
+    agent.save(
+        os.path.join(LOG_DIR, "dqn_agent.pth"),
+        completed_episodes=last_completed_episode,
+        epsilon=epsilon,
+    )
 
     tqdm.write("Training finished.")
     tqdm.write(f"Results saved to {LOG_DIR}")
