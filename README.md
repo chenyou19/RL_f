@@ -247,7 +247,6 @@ from rewards rather than using an action mask.
   remain available as a fallback in `DatasetManager`.
 - Feature selection currently uses `k="all"` as a placeholder.
 - Reward does not yet include a detailed computational cost term.
-- DQN does not use action masking.
 - Grid search uses a small candidate space for MVP comparison.
 
 ## Version Control Notes
