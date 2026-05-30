@@ -1,0 +1,13 @@
+﻿task_id,dataset_name,selected_pipeline,actions,validation_score,test_score,f1,accuracy,invalid_action_count,pipeline_length
+28,optdigits,"['pca', 'feature_selection', 'minmax_scaler', 'random_forest']","['pca', 'feature_selection', 'minmax_scaler', 'random_forest', 'evaluate']",0.9650065129539639,0.9751157599276793,0.9751157599276793,0.9750889679715302,0,4
+32,pendigits,"['pca', 'feature_selection', 'minmax_scaler', 'random_forest']","['pca', 'feature_selection', 'minmax_scaler', 'random_forest', 'evaluate']",0.9772126657641278,0.989098525140663,0.989098525140663,0.9890909090909091,0,4
+37,diabetes,"['pca', 'feature_selection', 'minmax_scaler', 'svm']","['pca', 'feature_selection', 'minmax_scaler', 'svm', 'evaluate']",0.7741462392625182,0.62895453593128,0.62895453593128,0.7012987012987013,0,4
+43,spambase,"['pca', 'feature_selection', 'minmax_scaler', 'svm']","['pca', 'feature_selection', 'minmax_scaler', 'svm', 'evaluate']",0.6592592592592593,0.6668746133491372,0.6668746133491372,0.6984815618221258,0,4
+53,vehicle,"['pca', 'feature_selection', 'minmax_scaler', 'svm']","['pca', 'feature_selection', 'minmax_scaler', 'svm', 'evaluate']",0.4424758493222553,0.43987657315331335,0.43987657315331335,0.4588235294117647,0,4
+3903,pc3,"['pca', 'feature_selection', 'minmax_scaler', 'svm']","['pca', 'feature_selection', 'minmax_scaler', 'svm', 'evaluate']",0.47305389221556887,0.47315436241610737,0.47315436241610737,0.8980891719745223,0,4
+3917,kc1,"['pca', 'feature_selection', 'minmax_scaler', 'svm']","['pca', 'feature_selection', 'minmax_scaler', 'svm', 'evaluate']",0.5634714508331002,0.6144414972001179,0.6144414972001179,0.8530805687203792,0,4
+9910,Bioresponse,"['pca', 'feature_selection', 'minmax_scaler', 'svm']","['pca', 'feature_selection', 'minmax_scaler', 'svm', 'evaluate']",0.7794446199351004,0.7578983516483517,0.7578983516483517,0.7606382978723404,0,4
+9952,phoneme,"['pca', 'feature_selection', 'minmax_scaler', 'svm']","['pca', 'feature_selection', 'minmax_scaler', 'svm', 'evaluate']",0.8011674709441179,0.8146331271937155,0.8146331271937155,0.8484288354898336,0,4
+9957,qsar-biodeg,"['pca', 'feature_selection', 'minmax_scaler', 'svm']","['pca', 'feature_selection', 'minmax_scaler', 'svm', 'evaluate']",0.7127977135598602,0.7227364185110665,0.7227364185110665,0.7547169811320755,0,4
+9976,madelon,"['pca', 'feature_selection', 'minmax_scaler', 'svm']","['pca', 'feature_selection', 'minmax_scaler', 'svm', 'evaluate']",0.5639190717987845,0.5994074074074074,0.5994074074074074,0.6,0,4
+146817,steel-plates-fault,"['pca', 'feature_selection', 'minmax_scaler', 'random_forest']","['pca', 'feature_selection', 'minmax_scaler', 'random_forest', 'evaluate']",0.15170481590644444,0.15014420788078078,0.15014420788078078,0.2564102564102564,0,4

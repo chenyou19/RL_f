@@ -1,0 +1,8 @@
+{
+  "{\"actions\":[\"minmax_scaler\",\"knn\"],\"dataset_id\":null,\"dataset_name\":\"iris\",\"seed\":42,\"split_type\":\"train\",\"task_id\":null,\"version\":\"v2\"}": {
+    "error": null,
+    "f1": 0.9333333333333332,
+    "status": "success",
+    "time": 0.001994609832763672
+  }
+}

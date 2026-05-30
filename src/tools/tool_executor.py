@@ -12,7 +12,9 @@ from typing import Any
 from sklearn.decomposition import PCA
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_selection import SelectKBest, f_classif
+from sklearn.feature_selection import VarianceThreshold
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 from sklearn.svm import SVC
 
@@ -50,7 +52,12 @@ class ToolExecutor:
             return PCA(n_components=0.95)
         if action_name == "feature_selection":
             k = self._feature_selection_k(n_features)
-            return SelectKBest(score_func=f_classif, k=k)
+            return Pipeline(
+                [
+                    ("variance_threshold", VarianceThreshold(threshold=0.0)),
+                    ("select_k_best", SelectKBest(score_func=f_classif, k=k)),
+                ]
+            )
         if action_name == "random_forest":
             return RandomForestClassifier(
                 n_estimators=100,

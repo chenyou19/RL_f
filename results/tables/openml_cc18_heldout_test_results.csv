@@ -1,13 +1,13 @@
 ﻿task_id,dataset_name,selected_pipeline,actions,validation_score,test_score,f1,accuracy,invalid_action_count,pipeline_length
-28,optdigits,['knn'],"['knn', 'evaluate']",0.9834905973359348,0.989310980869571,0.989310980869571,0.9893238434163701,0,1
-32,pendigits,['knn'],"['knn', 'evaluate']",0.9891814892379449,0.9953927106104054,0.9953927106104054,0.9954545454545455,0,1
-37,diabetes,['knn'],"['knn', 'evaluate']",0.6467785843920145,0.7386877828054299,0.7386877828054299,0.7662337662337663,0,1
-43,spambase,['knn'],"['knn', 'evaluate']",0.7946884819246517,0.7686857739242132,0.7686857739242132,0.7830802603036876,0,1
-53,vehicle,['knn'],"['knn', 'evaluate']",0.6404263438424929,0.6898860081846618,0.6898860081846618,0.6941176470588235,0,1
-3903,pc3,['knn'],"['knn', 'evaluate']",0.46504559270516715,0.4623287671232877,0.4623287671232877,0.8598726114649682,0,1
-3917,kc1,['knn'],"['knn', 'evaluate']",0.6268502439427768,0.6653208363374189,0.6653208363374189,0.8436018957345972,0,1
-9910,Bioresponse,['knn'],"['knn', 'evaluate']",0.7439637676515201,0.7499696113832184,0.7499696113832184,0.7526595744680851,0,1
-9952,phoneme,['knn'],"['knn', 'evaluate']",0.8317386917985192,0.8724142577993397,0.8724142577993397,0.8964879852125693,0,1
-9957,qsar-biodeg,['knn'],"['knn', 'evaluate']",0.7875126480566632,0.7524983655552442,0.7524983655552442,0.7641509433962265,0,1
-9976,madelon,['knn'],"['knn', 'evaluate']",0.6917447306791569,0.7268867156869998,0.7268867156869998,0.7269230769230769,0,1
-146817,steel-plates-fault,['knn'],"['knn', 'evaluate']",0.34016655787645955,0.3245634912872144,0.3245634912872144,0.48205128205128206,0,1
+28,optdigits,"['minmax_scaler', 'feature_selection', 'pca', 'random_forest']","['minmax_scaler', 'feature_selection', 'pca', 'random_forest', 'evaluate']",0.9709037454811437,0.9760236581190723,0.9760236581190723,0.9759786476868327,0,4
+32,pendigits,"['feature_selection', 'minmax_scaler', 'pca', 'random_forest']","['feature_selection', 'minmax_scaler', 'pca', 'random_forest', 'evaluate']",0.9772126657641278,0.989098525140663,0.989098525140663,0.9890909090909091,0,4
+37,diabetes,"['feature_selection', 'minmax_scaler', 'pca', 'knn']","['feature_selection', 'minmax_scaler', 'pca', 'knn', 'evaluate']",0.78812893081761,0.6863840871418423,0.6863840871418423,0.7207792207792207,0,4
+43,spambase,"['minmax_scaler', 'feature_selection', 'pca', 'knn']","['minmax_scaler', 'feature_selection', 'pca', 'knn', 'evaluate']",0.8695621109414213,0.8906287069988137,0.8906287069988137,0.89587852494577,0,4
+53,vehicle,"['minmax_scaler', 'feature_selection', 'pca', 'knn']","['minmax_scaler', 'feature_selection', 'pca', 'knn', 'evaluate']",0.5791157489704254,0.6248612498612498,0.6248612498612498,0.6235294117647059,0,4
+3903,pc3,"['feature_selection', 'minmax_scaler', 'pca', 'knn']","['feature_selection', 'minmax_scaler', 'pca', 'knn', 'evaluate']",0.6054742803209061,0.587128027681661,0.587128027681661,0.8789808917197452,0,4
+3917,kc1,"['feature_selection', 'minmax_scaler', 'pca', 'knn']","['feature_selection', 'minmax_scaler', 'pca', 'knn', 'evaluate']",0.6195887445887446,0.619029381189473,0.619029381189473,0.8436018957345972,0,4
+9910,Bioresponse,"['minmax_scaler', 'feature_selection', 'pca', 'knn']","['minmax_scaler', 'feature_selection', 'pca', 'knn', 'evaluate']",0.7421296684463405,0.7423186750428328,0.7423186750428328,0.7446808510638298,0,4
+9952,phoneme,"['minmax_scaler', 'feature_selection', 'pca', 'knn']","['minmax_scaler', 'feature_selection', 'pca', 'knn', 'evaluate']",0.8340754432359172,0.868376455585758,0.868376455585758,0.8927911275415896,0,4
+9957,qsar-biodeg,"['minmax_scaler', 'feature_selection', 'pca', 'knn']","['minmax_scaler', 'feature_selection', 'pca', 'knn', 'evaluate']",0.8087379211666241,0.8507042253521127,0.8507042253521127,0.8679245283018868,0,4
+9976,madelon,"['minmax_scaler', 'feature_selection', 'pca', 'knn']","['minmax_scaler', 'feature_selection', 'pca', 'knn', 'evaluate']",0.5333880840403658,0.5808662900188324,0.5808662900188324,0.5884615384615385,0,4
+146817,steel-plates-fault,"['feature_selection', 'minmax_scaler', 'pca', 'knn']","['feature_selection', 'minmax_scaler', 'pca', 'knn', 'evaluate']",0.7237771389884877,0.7264240939994168,0.7264240939994168,0.7128205128205128,0,4

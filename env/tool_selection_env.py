@@ -22,7 +22,7 @@ class ToolSelectionEnv:
 
         self.profiler = DataProfiler()
         self.executor = ToolExecutor(seed=seed)
-        self.cache = PipelineCache()
+        self.cache = PipelineCache(seed=seed)
 
         self.current_dataset = None
         self.dataset_profile = None
@@ -174,15 +174,14 @@ class ToolSelectionEnv:
         return False
 
     def _evaluate_pipeline(self):
-        dataset_name = self.current_dataset.name
         actions = list(self.pipeline_actions)
 
-        if self.cache.has(dataset_name, actions):
-            result = self.cache.get(dataset_name, actions)
+        if self.cache.has(self.current_dataset, actions):
+            result = self.cache.get(self.current_dataset, actions)
             cache_hit = True
         else:
             result = self.executor.evaluate(self.current_dataset, actions)
-            self.cache.set(dataset_name, actions, result)
+            self.cache.set(self.current_dataset, actions, result)
             cache_hit = False
 
         f1 = result["f1"]
@@ -197,6 +196,8 @@ class ToolSelectionEnv:
             "f1": f1,
             "eval_time": result["time"],
             "cache_hit": cache_hit,
+            "eval_status": result.get("status", "success"),
+            "eval_error": result.get("error"),
         }
 
         return reward, info

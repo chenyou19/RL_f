@@ -12,7 +12,12 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
-from config import OPENML_CACHE_DIR, OPENML_SUITE_ID, TEST_OPENML_TASKS
+from config import (
+    OPENML_CACHE_DIR,
+    OPENML_CC18_SUITE_TASKS,
+    OPENML_SUITE_ID,
+    TEST_OPENML_TASKS,
+)
 
 
 @dataclass
@@ -212,11 +217,13 @@ class OpenMLCC18DatasetManager:
         if self._suite_task_ids is not None:
             return
 
-        openml = self._import_openml()
-        self._configure_openml(openml)
-
-        suite = openml.study.get_suite(self.suite_id)
-        suite_task_ids = sorted(int(task_id) for task_id in suite.tasks)
+        if self.suite_id == OPENML_SUITE_ID:
+            suite_task_ids = sorted(int(task_id) for task_id in OPENML_CC18_SUITE_TASKS)
+        else:
+            openml = self._import_openml()
+            self._configure_openml(openml)
+            suite = openml.study.get_suite(self.suite_id)
+            suite_task_ids = sorted(int(task_id) for task_id in suite.tasks)
         test_task_ids = sorted(int(task_id) for task_id in self.test_task_ids)
 
         missing_test_tasks = sorted(set(test_task_ids) - set(suite_task_ids))
@@ -322,7 +329,10 @@ class OpenMLCC18DatasetManager:
 
     def _configure_openml(self, openml) -> None:
         os.makedirs(self.cache_dir, exist_ok=True)
-        openml.config.cache_directory = self.cache_dir
+        if hasattr(openml.config, "set_root_cache_directory"):
+            openml.config.set_root_cache_directory(self.cache_dir)
+        else:
+            openml.config.cache_directory = self.cache_dir
 
     def _import_openml(self):
         try:

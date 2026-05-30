@@ -191,6 +191,12 @@ Evaluate the trained model on the 12 held-out tasks:
 python scripts/evaluate_heldout_openml.py
 ```
 
+Use a specific DQN checkpoint for held-out evaluation:
+
+```bash
+python scripts/evaluate_heldout_openml.py --model-path results/logs/dqn_agent_ep_3000.pth
+```
+
 Held-out evaluation is written to:
 
 ```text

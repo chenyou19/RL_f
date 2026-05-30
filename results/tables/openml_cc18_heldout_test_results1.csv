@@ -1,0 +1,13 @@
+﻿task_id,dataset_name,selected_pipeline,actions,validation_score,test_score,f1,accuracy,invalid_action_count,pipeline_length
+28,optdigits,['svm'],"['svm', 'evaluate']",0.9840736039176576,0.9920096641067534,0.9920096641067534,0.9919928825622776,0,1
+32,pendigits,"['standard_scaler', 'svm']","['standard_scaler', 'svm', 'evaluate']",0.99357954324103,0.9971471134499301,0.9971471134499301,0.9972727272727273,0,2
+37,diabetes,"['minmax_scaler', 'pca', 'knn']","['minmax_scaler', 'pca', 'knn', 'evaluate']",0.78812893081761,0.6863840871418423,0.6863840871418423,0.7207792207792207,0,3
+43,spambase,"['minmax_scaler', 'pca', 'feature_selection', 'svm']","['minmax_scaler', 'pca', 'feature_selection', 'svm', 'evaluate']",0.9107338471833255,0.9128769793904672,0.9128769793904672,0.9175704989154013,0,4
+53,vehicle,"['standard_scaler', 'knn']","['standard_scaler', 'knn', 'evaluate']",0.6467596165486006,0.7212486157253599,0.7212486157253599,0.7176470588235294,0,2
+3903,pc3,"['minmax_scaler', 'pca', 'feature_selection', 'svm']","['minmax_scaler', 'pca', 'feature_selection', 'svm', 'evaluate']",0.47305389221556887,0.47315436241610737,0.47315436241610737,0.8980891719745223,0,4
+3917,kc1,"['minmax_scaler', 'pca', 'knn']","['minmax_scaler', 'pca', 'knn', 'evaluate']",0.6195887445887446,0.619029381189473,0.619029381189473,0.8436018957345972,0,3
+9910,Bioresponse,"['standard_scaler', 'pca', 'feature_selection', 'svm']","['standard_scaler', 'pca', 'feature_selection', 'svm', 'evaluate']",0.7839344635339629,0.7742903696080953,0.7742903696080953,0.776595744680851,0,4
+9952,phoneme,"['minmax_scaler', 'pca', 'feature_selection', 'knn']","['minmax_scaler', 'pca', 'feature_selection', 'knn', 'evaluate']",0.8340754432359172,0.868376455585758,0.868376455585758,0.8927911275415896,0,4
+9957,qsar-biodeg,"['minmax_scaler', 'pca', 'svm']","['minmax_scaler', 'pca', 'svm', 'evaluate']",0.8277608915906787,0.8700980392156863,0.8700980392156863,0.8867924528301887,0,3
+9976,madelon,"['standard_scaler', 'pca', 'knn']","['standard_scaler', 'pca', 'knn', 'evaluate']",0.5087986328072845,0.521263958184842,0.521263958184842,0.5230769230769231,0,3
+146817,steel-plates-fault,"['minmax_scaler', 'pca', 'svm']","['minmax_scaler', 'pca', 'svm', 'evaluate']",0.6870182480549519,0.6497905295587414,0.6497905295587414,0.7025641025641025,0,3

@@ -1,3 +1,4 @@
+import argparse
 import os
 from pathlib import Path
 import sys
@@ -5,13 +6,6 @@ from datetime import datetime
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
-
-from agents.dqn_agent import DQNAgent
-
-import numpy as np
-import pandas as pd
-from sklearn.metrics import accuracy_score, f1_score
-from tqdm.auto import tqdm
 
 from config import (
     ACTION_DIM,
@@ -29,10 +23,45 @@ from config import (
     TABLE_DIR,
     TEST_OPENML_TASKS,
 )
-from data.dataset_manager import OpenMLCC18DatasetManager
-from env.tool_selection_env import ToolSelectionEnv
-from tools.tool_executor import ToolExecutor
-from utils.seed import set_seed
+
+
+DEFAULT_MODEL_PATH = os.path.join(LOG_DIR, "dqn_agent.pth")
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Evaluate a trained DQN model on held-out OpenML-CC18 tasks."
+    )
+    parser.add_argument(
+        "--model-path",
+        default=DEFAULT_MODEL_PATH,
+        help="Path to the trained DQN checkpoint.",
+    )
+    return parser.parse_args()
+
+
+def load_runtime_dependencies():
+    global DQNAgent
+    global OpenMLCC18DatasetManager
+    global ToolExecutor
+    global ToolSelectionEnv
+    global accuracy_score
+    global f1_score
+    global np
+    global pd
+    global set_seed
+    global tqdm
+
+    from agents.dqn_agent import DQNAgent
+    import numpy as np
+    import pandas as pd
+    from sklearn.metrics import accuracy_score, f1_score
+    from tqdm.auto import tqdm
+
+    from data.dataset_manager import OpenMLCC18DatasetManager
+    from env.tool_selection_env import ToolSelectionEnv
+    from tools.tool_executor import ToolExecutor
+    from utils.seed import set_seed
 
 
 def format_state_summary(state):
@@ -118,12 +147,15 @@ def evaluate_agent_on_dataset(agent, dataset, seed):
 
 
 def main():
-    set_seed(SEED)
-    model_path = os.path.join(LOG_DIR, "dqn_agent.pth")
+    args = parse_args()
+    model_path = args.model_path
     if not os.path.exists(model_path):
         raise FileNotFoundError(
             f"DQN model not found at {model_path}. Run python train_dqn.py first."
         )
+
+    load_runtime_dependencies()
+    set_seed(SEED)
 
     manager = OpenMLCC18DatasetManager(seed=SEED)
     test_task_ids = manager.get_test_task_ids()

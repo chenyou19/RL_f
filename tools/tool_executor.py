@@ -8,6 +8,7 @@ from sklearn.metrics import f1_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
+from sklearn.feature_selection import VarianceThreshold
 from sklearn.svm import SVC
 
 
@@ -26,7 +27,17 @@ class ToolExecutor:
             elif action == "pca":
                 steps.append(("pca", PCA(n_components=0.95, random_state=self.seed)))
             elif action == "feature_selection":
-                steps.append(("select", SelectKBest(score_func=f_classif, k="all")))
+                steps.append(
+                    (
+                        "select",
+                        Pipeline(
+                            [
+                                ("variance_threshold", VarianceThreshold(threshold=0.0)),
+                                ("select_k_best", SelectKBest(score_func=f_classif, k="all")),
+                            ]
+                        ),
+                    )
+                )
             elif action == "random_forest":
                 steps.append(
                     (
@@ -60,14 +71,23 @@ class ToolExecutor:
 
         start_time = time.time()
 
-        pipeline.fit(dataset.X_train, dataset.y_train)
-        y_pred = pipeline.predict(dataset.X_val)
+        try:
+            pipeline.fit(dataset.X_train, dataset.y_train)
+            y_pred = pipeline.predict(dataset.X_val)
+            f1 = f1_score(dataset.y_val, y_pred, average="macro")
+            status = "success"
+            error = None
+        except ValueError as exc:
+            f1 = 0.0
+            status = "failed"
+            error = str(exc)
 
         elapsed_time = time.time() - start_time
-        f1 = f1_score(dataset.y_val, y_pred, average="macro")
 
         return {
             "f1": float(f1),
             "time": float(elapsed_time),
             "pipeline": pipeline,
+            "status": status,
+            "error": error,
         }
